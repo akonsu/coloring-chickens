@@ -15,28 +15,46 @@ public class DrawingView extends ImageView
     private Canvas _overlay_canvas;
     private Paint _paint = null;
 
+    private void init()
+    {
+        _paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        _paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
+        _paint.setColor(Color.TRANSPARENT);
+        _paint.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL));
+    }
+
     public DrawingView(Context context)
     {
         super(context);
+        init();
     }
 
     public DrawingView(Context context, AttributeSet attrs)
     {
-        super(context, attrs);
+        this(context, attrs, 0);
+
     }
 
     public DrawingView(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
+        init();
     }
 
     @Override
     public void onDraw(Canvas canvas)
     {
-        if (_overlay_bitmap != null)
+        if (_overlay_bitmap == null)
         {
-            canvas.drawBitmap(_overlay_bitmap, 0, 0, null);
+            final Drawable drawable = getDrawable();
+            final Rect r = drawable.getBounds();
+
+            _overlay_bitmap = Bitmap.createBitmap(r.right, r.bottom, Bitmap.Config.ARGB_8888);
+            _overlay_canvas = new Canvas(_overlay_bitmap);
+
+            super.onDraw(_overlay_canvas);
         }
+        canvas.drawBitmap(_overlay_bitmap, 0, 0, null);
     }
 
     @Override
@@ -44,22 +62,8 @@ public class DrawingView extends ImageView
     {
         super.onSizeChanged(w, h, old_w, old_h);
 
-        _overlay_bitmap = Bitmap.createBitmap(w, h, Bitmap.Config.ARGB_8888);
-        _overlay_canvas = new Canvas(_overlay_bitmap);
-
-        final Drawable drawable = getDrawable();
-
-        //_overlay_bitmap.setHasAlpha(true);
-        drawable.setBounds(0, 0, _overlay_canvas.getWidth(), _overlay_canvas.getHeight());
-        drawable.draw(_overlay_canvas);
-
-        if (_paint == null)
-        {
-            _paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-            _paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
-            _paint.setColor(Color.TRANSPARENT);
-            _paint.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL));
-        }
+        _overlay_bitmap = null;
+        _overlay_canvas = null;
     }
 
     @Override
