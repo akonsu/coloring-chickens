@@ -4,6 +4,7 @@ package rabbitmish.coloringchickens;
 
 import android.app.Activity;
 import android.os.Bundle;
+import android.widget.ImageView;
 
 public class MainActivity extends Activity
 {
@@ -12,5 +13,13 @@ public class MainActivity extends Activity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
+    }
+
+    @Override
+    public void onDestroy()
+    {
+        ImageView view = (ImageView)findViewById(R.id.eraseView);
+        view.setImageDrawable(null);
+        super.onDestroy();
     }
 }

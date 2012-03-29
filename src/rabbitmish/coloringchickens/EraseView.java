@@ -1,21 +1,23 @@
-/* -*- mode:java; coding:utf-8; -*- Time-stamp: <DrawingView.java - root> */
+/* -*- mode:java; coding:utf-8; -*- Time-stamp: <EraseView.java - root> */
 
 package rabbitmish.coloringchickens;
 
 import android.content.Context;
 import android.graphics.*;
 import android.graphics.drawable.Drawable;
-import android.util.AttributeSet;
+import android.util.*;
 import android.view.*;
 import android.widget.ImageView;
 import java.util.HashMap;
 
-public class DrawingView extends ImageView
+public class EraseView extends ImageView
 {
-    private Bitmap _overlay_bitmap;
-    private Canvas _overlay_canvas;
     private final Paint _paint = new Paint(Paint.ANTI_ALIAS_FLAG);
     private final HashMap<Integer, PointF> _points = new HashMap<Integer, PointF>();
+
+    private Bitmap _overlay_bitmap;
+    private Canvas _overlay_canvas;
+    private int[] _pixels;
 
     private boolean eraseToPointer(MotionEvent e, int index, boolean remove)
     {
@@ -31,28 +33,59 @@ public class DrawingView extends ImageView
         return true;
     }
 
+    private boolean is_erased()
+    {
+        if (_overlay_bitmap == null)
+        {
+            return true;
+        }
+
+        final int AUTO_COMPLETE_PERCENT = 25;
+        final int w = _overlay_bitmap.getWidth();
+        final int h = _overlay_bitmap.getHeight();
+        final int length = w * h;
+
+        int count = 0;
+
+        if (_pixels == null || _pixels.length != length)
+        {
+            _pixels = new int[length];
+        }
+        _overlay_bitmap.getPixels(_pixels, 0, w, 0, 0, w, h);
+
+        for (int i = 0; i < length; i++)
+        {
+            final int alpha = Color.alpha(_pixels[i]);
+
+            if (alpha > 0)
+            {
+                count++;
+            }
+        }
+        return count * 100 < length * AUTO_COMPLETE_PERCENT;
+    }
+
     private void init()
     {
         _paint.setXfermode(new PorterDuffXfermode(PorterDuff.Mode.SRC_OUT));
         _paint.setColor(Color.TRANSPARENT);
-        _paint.setMaskFilter(new BlurMaskFilter(15, BlurMaskFilter.Blur.NORMAL));
         _paint.setStrokeCap(Paint.Cap.ROUND);
         _paint.setStrokeJoin(Paint.Join.ROUND);
         _paint.setStrokeWidth(30);
     }
 
-    public DrawingView(Context context)
+    public EraseView(Context context)
     {
         super(context);
         init();
     }
 
-    public DrawingView(Context context, AttributeSet attrs)
+    public EraseView(Context context, AttributeSet attrs)
     {
         this(context, attrs, 0);
     }
 
-    public DrawingView(Context context, AttributeSet attrs, int defStyle)
+    public EraseView(Context context, AttributeSet attrs, int defStyle)
     {
         super(context, attrs, defStyle);
         init();
@@ -81,6 +114,7 @@ public class DrawingView extends ImageView
 
         _overlay_bitmap = null;
         _overlay_canvas = null;
+        _pixels = null;
         _points.clear();
     }
 
@@ -138,6 +172,9 @@ public class DrawingView extends ImageView
             if (eraseToPointer(e, 0, true))
             {
                 invalidate();
+            }
+            if (is_erased())
+            {
             }
             // fall through
 

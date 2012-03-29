@@ -10,7 +10,8 @@
              android:layout_height="wrap_content"
              android:layout_gravity="center"
              android:duplicateParentState="true" />
-  <view class="rabbitmish.coloringchickens.DrawingView"
+  <view class="rabbitmish.coloringchickens.EraseView"
+        android:id="@+id/eraseView"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:src="@drawable/brown_hen_bw" />
