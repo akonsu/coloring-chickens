@@ -14,13 +14,13 @@ import android.graphics.PorterDuff;
 import android.graphics.PorterDuffXfermode;
 import android.graphics.drawable.BitmapDrawable;
 import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.widget.ImageView;
 
 public class EraseView extends ImageView
 {
     private final HashMap<Integer, float[]> _coords = new HashMap<Integer, float[]>();
+    private OnEraseListener _listener;
     private Matrix _matrix;
     private final Paint _paint = new Paint(Paint.ANTI_ALIAS_FLAG);
 
@@ -76,7 +76,7 @@ public class EraseView extends ImageView
         _paint.setStrokeWidth(90);
     }
 
-    private boolean is_erased()
+    private boolean isErased()
     {
         final Bitmap bitmap = ((BitmapDrawable)getDrawable()).getBitmap();
 
@@ -85,9 +85,22 @@ public class EraseView extends ImageView
             return true;
         }
 
+        int w = bitmap.getWidth();
+        int h = bitmap.getHeight();
+
+        final int scaled_w = 50;
+        final int scaled_h = h * scaled_w / w;
+
+        Bitmap scaled = bitmap;
+
+        if (scaled_w < w)
+        {
+            w = scaled_w;
+            h = scaled_h;
+            scaled = Bitmap.createScaledBitmap(bitmap, w, h, false);
+        }
+
         final int AUTO_COMPLETE_PERCENT = 25;
-        final int w = bitmap.getWidth();
-        final int h = bitmap.getHeight();
         final int length = w * h;
 
         int count = 0;
@@ -96,8 +109,13 @@ public class EraseView extends ImageView
         {
             _pixels = new int[length];
         }
-        bitmap.getPixels(_pixels, 0, w, 0, 0, w, h);
+        scaled.getPixels(_pixels, 0, w, 0, 0, w, h);
 
+        if (scaled != bitmap)
+        {
+            scaled.recycle();
+            scaled = null;
+        }
         for (int i = 0; i < length; i++)
         {
             final int alpha = Color.alpha(_pixels[i]);
@@ -183,9 +201,9 @@ public class EraseView extends ImageView
             {
                 invalidate();
             }
-            if (is_erased())
+            if (isErased() && _listener != null)
             {
-                Log.d("--------------------------------------------------", "----------------------------------");
+                _listener.onErased();
             }
             // fall through
 
@@ -194,5 +212,10 @@ public class EraseView extends ImageView
             break;
         }
         return true;
+    }
+
+    public void setOnEraseListener(OnEraseListener listener)
+    {
+        _listener = listener;
     }
 }
