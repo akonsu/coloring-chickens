@@ -8,6 +8,7 @@ import android.widget.ImageView;
 
 public class MainActivity extends Activity
 {
+
     @Override
     public void onCreate(Bundle savedInstanceState)
     {
@@ -19,7 +20,11 @@ public class MainActivity extends Activity
     public void onDestroy()
     {
         ImageView view = (ImageView)findViewById(R.id.eraseView);
-        view.setImageDrawable(null);
+
+        if (view != null)
+        {
+            view.setImageDrawable(null);
+        }
         super.onDestroy();
     }
 }
