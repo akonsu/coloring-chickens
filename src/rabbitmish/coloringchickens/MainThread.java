@@ -52,7 +52,9 @@ public class MainThread extends Thread
 
         while (_running)
         {
-            final long frame_time = (start_time + (System.currentTimeMillis() - start_time) / FRAME_DURATION * FRAME_DURATION + skip_interval);
+            final long frame_time = (start_time
+                                     + (System.currentTimeMillis() - start_time) / FRAME_DURATION * FRAME_DURATION
+                                     + skip_interval);
 
             _view.update();
 
