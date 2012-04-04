@@ -8,6 +8,7 @@ import android.view.SurfaceHolder;
 public class MainThread extends Thread
 {
     private final static int FRAME_DURATION = 1000 / 25 /* frames per second */;
+    private final static int MAX_SKIP_COUNT = 5;
 
     private boolean _running;
     private SurfaceHolder _surface_holder;
@@ -46,27 +47,34 @@ public class MainThread extends Thread
     @Override
     public void run()
     {
-        final long start_time = System.currentTimeMillis();
+        // ending time of the last rendered frame
+        long frame_time = System.currentTimeMillis();
 
-        long skip_interval = 0;
+        // total number of frames to skip
+        long skip_total = 0;
+
+        // number of remaining frames to skip
+        long skip_count = 0;
 
         while (_running)
         {
-            final long frame_time = (start_time
-                                     + (System.currentTimeMillis() - start_time) / FRAME_DURATION * FRAME_DURATION
-                                     + skip_interval);
-
             _view.update();
 
-            if (System.currentTimeMillis() > frame_time)
+            if (skip_count > 0)
+            {
+                skip_count--;
+            }
+            else
             {
                 draw();
+                frame_time += (skip_total + 1) * FRAME_DURATION;
 
-                final long delta = frame_time + FRAME_DURATION - System.currentTimeMillis();
+                final long delta = frame_time - System.currentTimeMillis();
 
                 if (delta < 0)
                 {
-                    skip_interval = FRAME_DURATION;
+                    skip_total = Math.min((FRAME_DURATION - delta - 1) / FRAME_DURATION, MAX_SKIP_COUNT);
+                    skip_count = skip_total;
                 }
                 else
                 {
@@ -78,7 +86,8 @@ public class MainThread extends Thread
                     {
                         // ignore
                     }
-                    skip_interval = 0;
+                    skip_total = 0;
+                    skip_count = 0;
                 }
             }
         }
